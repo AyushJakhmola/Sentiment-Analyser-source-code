@@ -20,7 +20,7 @@ class App extends Component {
     };
 
     analyzeSentence() {
-        fetch('http://localhost:8080/sentiment', {
+        fetch('http://webapp.rtd.squareops.co.in/sentiment', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
