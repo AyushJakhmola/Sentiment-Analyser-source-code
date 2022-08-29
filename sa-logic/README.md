@@ -28,7 +28,7 @@ Request body:
 
 ```
 {
-    "sentence": "I hate you!"
+    "sentence": "I love you!"
 }
 ```
 
