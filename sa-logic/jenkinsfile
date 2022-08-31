@@ -1,0 +1,83 @@
+properties([pipelineTriggers([githubPush()])])
+pipeline {
+    agent {
+        label 'docker-agent'
+    }
+environment {
+		DOCKERHUB_CREDENTIALS=credentials('docker-repo')
+		Branch="main"
+	}
+    
+    stage('Checkout SCM') {
+  steps {
+    checkout([
+      $class: 'GitSCM',
+      branches: [[name: 'master']],
+      userRemoteConfigs: [[
+        url: 'https://github.com/AyushJakhmola/Sentiment-Analyser-source-code.git',
+        credentialsId: 'github-repo-up',
+      ]]
+     ])
+   }
+}
+    
+    stages {
+        stage('clone') {
+            steps {
+                git 'https://github.com/AyushJakhmola/k8s-mastery.git'
+            }
+        }
+        
+        stage('Build') {
+
+			steps {
+				sh '''cd sa-logic/
+                      docker build -t ayushjakhmola001/sentiment-analysis-logic:$BUILD_NUMBER .'''
+			}
+		}
+
+		stage('Login') {
+
+			steps {
+				sh 'echo $DOCKERHUB_CREDENTIALS_PSW | docker login -u $DOCKERHUB_CREDENTIALS_USR --password-stdin'
+			}
+		}
+
+		stage('Push') {
+
+			steps {
+				sh 'docker push ayushjakhmola001/sentiment-analysis-logic:$BUILD_NUMBER'
+			}
+		}
+		
+		stage('updating git repo') {
+
+			steps {
+				withCredentials([gitUsernamePassword(credentialsId: 'git-repo')]) {
+
+                    script{
+           sh ''' 
+          	git clone https://github.com/AyushJakhmola/sentiment-analyser.git
+            cd sentiment-analyser/sa-logic/              
+	      git config --global user.email "ayushjakhmola001@gmail.com"
+	      git config --global user.name "AyushJakhmola"
+	      wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/latest/download/yq_linux_amd64
+	      chmod a+x /usr/local/bin/yq
+		  yq e -i '(.image.tag = "'${BUILD_NUMBER}'")' values.yaml           
+	      git add .
+	      git commit -m 'updating image tag in github logic app at helm values.yml'
+	      git push origin $Branch
+            '''
+        
+    
+                    }
+                }
+			}
+		}
+}
+	post {
+		always {
+			sh 'docker logout'
+		}
+	}
+}
