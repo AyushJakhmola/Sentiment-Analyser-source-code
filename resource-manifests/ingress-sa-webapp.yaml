@@ -13,6 +13,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: sa-web-app-lb
+            name: sa-web-app
             port:
               number: 80
