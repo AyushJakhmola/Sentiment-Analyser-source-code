@@ -13,6 +13,6 @@ spec:
         pathType: Prefix
         backend:
           service:
-            name: sa-frontend-lb
+            name: sa-frontend
             port: 
               number: 80
